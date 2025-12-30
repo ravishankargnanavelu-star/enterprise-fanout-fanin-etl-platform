@@ -1,0 +1,25 @@
+{
+  "Comment": "Post Processing After Successful ETL",
+  "StartAt": "UpdateMetadata",
+  "States": {
+    "UpdateMetadata": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "UpdateMetadata",
+        "Payload.$": "$"
+      },
+      "Next": "TriggerDownstream"
+    },
+
+    "TriggerDownstream": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "TriggerDownstream",
+        "Payload.$": "$"
+      },
+      "End": true
+    }
+  }
+}
