@@ -1,0 +1,119 @@
+{
+  "Comment": "Common Fan-Out Orchestration for Multi-Domain ETL",
+  "StartAt": "ValidateRawData",
+  "States": {
+    "ValidateRawData": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "ValidateRawData",
+        "Payload.$": "$"
+      },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ValidationFailed"
+        }
+      ],
+      "Next": "IdempotencyCheck"
+    },
+
+    "IdempotencyCheck": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "IdempotencyCheck",
+        "Payload.$": "$"
+      },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "IdempotencyFailed"
+        }
+      ],
+      "Next": "RouteByDomain"
+    },
+
+    "RouteByDomain": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.domain",
+          "StringEquals": "sales",
+          "Next": "RunSalesETL"
+        },
+        {
+          "Variable": "$.domain",
+          "StringEquals": "payments",
+          "Next": "RunPaymentsETL"
+        },
+        {
+          "Variable": "$.domain",
+          "StringEquals": "users",
+          "Next": "RunUsersETL"
+        },
+        {
+          "Variable": "$.domain",
+          "StringEquals": "logs",
+          "Next": "RunLogsETL"
+        }
+      ],
+      "Default": "UnsupportedDomain"
+    },
+
+    "RunSalesETL": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn": "arn:aws:states:region:acct:stateMachine:SalesETL",
+        "Input.$": "$"
+      },
+      "End": true
+    },
+
+    "RunPaymentsETL": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn": "arn:aws:states:region:acct:stateMachine:PaymentsETL",
+        "Input.$": "$"
+      },
+      "End": true
+    },
+
+    "RunUsersETL": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn": "arn:aws:states:region:acct:stateMachine:UsersETL",
+        "Input.$": "$"
+      },
+      "End": true
+    },
+
+    "RunLogsETL": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution",
+      "Parameters": {
+        "StateMachineArn": "arn:aws:states:region:acct:stateMachine:LogsETL",
+        "Input.$": "$"
+      },
+      "End": true
+    },
+
+    "ValidationFailed": {
+      "Type": "Fail",
+      "Cause": "Raw data validation failed"
+    },
+
+    "IdempotencyFailed": {
+      "Type": "Fail",
+      "Cause": "Duplicate execution detected"
+    },
+
+    "UnsupportedDomain": {
+      "Type": "Fail",
+      "Cause": "Unsupported domain"
+    }
+  }
+}
