@@ -59,6 +59,6 @@ gold_df = (
 )
 
 gold_df.write \
-    .mode("overwrite") \
-    .partitionBy("process_date") \
-    .parquet(f"{CURATED_PATH}/payments/")
+    .mode("write") \
+    .partitionBy("process_date") 
+    .parquet(f"{CURATED_PATH}/payments/"
