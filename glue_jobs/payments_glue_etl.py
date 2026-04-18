@@ -61,4 +61,4 @@ gold_df = (
 gold_df.write \
     .mode("write") \
     .partitionBy("process_date") 
-    .parquet(f"{CURATED_PATH}/payments/")
+    .parquet(f"{CURATED_PATH}/payments/"
